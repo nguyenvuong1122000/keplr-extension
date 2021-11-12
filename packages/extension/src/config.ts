@@ -75,7 +75,7 @@ import {
   AGORIC_RPC_CONFIG,
   AGORIC_REST_ENDPOINT,
   AGORIC_REST_CONFIG,
-} from "./config.var";
+} from "./config.var.example";
 
 export const EmbedChainInfos: ChainInfo[] = [
   {

@@ -6,6 +6,7 @@ import {
   KeplrSignOptions,
   Key,
 } from "@keplr-wallet/types";
+import{ExportKeyRingData, ExportKeyRingDatasMsg} from "@keplr-wallet/background"
 import { BACKGROUND_PORT, MessageRequester } from "@keplr-wallet/router";
 import {
   BroadcastMode,
@@ -69,6 +70,11 @@ export class Keplr implements IKeplr {
     return await this.requester.sendMessage(BACKGROUND_PORT, msg);
   }
 
+  async exportKeyRingDatas(password: string): Promise<ExportKeyRingData[]>{
+    const msg = new ExportKeyRingDatasMsg(password);
+    return await this.requester.sendMessage(BACKGROUND_PORT, msg);
+  }
+
   async sendTx(
     chainId: string,
     tx: StdTx | Uint8Array,
@@ -104,6 +110,7 @@ export class Keplr implements IKeplr {
     },
     signOptions: KeplrSignOptions = {}
   ): Promise<DirectSignResponse> {
+    console.log("sign here 0001")
     const msg = new RequestSignDirectMsg(
       chainId,
       signer,

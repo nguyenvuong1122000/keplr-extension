@@ -7,6 +7,8 @@ import {
   OfflineSigner,
 } from "@cosmjs/launchpad";
 import { DirectSignResponse, OfflineDirectSigner } from "@cosmjs/proto-signing";
+import{ExportKeyRingData} from "@keplr-wallet/background"
+
 import { SecretUtils } from "secretjs/types/enigmautils";
 import Long from "long";
 
@@ -116,4 +118,5 @@ export interface Keplr {
     ciphertext: Uint8Array,
     nonce: Uint8Array
   ): Promise<Uint8Array>;
+  exportKeyRingDatas(password: string): Promise<ExportKeyRingData[]>
 }

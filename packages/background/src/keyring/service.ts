@@ -222,6 +222,7 @@ export class KeyRingService {
     signDoc: StdSignDoc,
     signOptions: KeplrSignOptions
   ): Promise<AminoSignResponse> {
+    console.log("sign here by background")
     const coinType = await this.chainsService.getChainCoinType(chainId);
 
     const key = await this.keyRing.getKey(chainId, coinType);

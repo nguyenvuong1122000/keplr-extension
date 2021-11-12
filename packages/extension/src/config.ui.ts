@@ -4,7 +4,7 @@ import {
   ETHEREUM_ENDPOINT,
   ADDITIONAL_INTL_MESSAGES,
   ADDITIONAL_SIGN_IN_PREPEND,
-} from "./config.ui.var";
+} from "./config.ui.var.example";
 import {
   IntlMessages,
   LanguageToFiatCurrency as TypeLanguageToFiatCurrency,

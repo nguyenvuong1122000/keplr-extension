@@ -7,6 +7,7 @@ import {
   KeplrSignOptions,
   Key,
 } from "@keplr-wallet/types";
+import{ExportKeyRingData} from "@keplr-wallet/background"
 import { Result, JSONUint8Array } from "@keplr-wallet/router";
 import {
   BroadcastMode,
@@ -289,6 +290,7 @@ export class InjectedKeplr implements IKeplr {
     },
     signOptions: KeplrSignOptions = {}
   ): Promise<DirectSignResponse> {
+    console.log("signDirect")
     const result = await this.requestMethod("signDirect", [
       chainId,
       signer,
@@ -413,5 +415,10 @@ export class InjectedKeplr implements IKeplr {
     const enigmaUtils = new KeplrEnigmaUtils(chainId, this);
     this.enigmaUtils.set(chainId, enigmaUtils);
     return enigmaUtils;
+  }
+
+  async exportKeyRingDatas(password: string): Promise<ExportKeyRingData[]>{
+    const result = await this.requestMethod("exportKeyRingDatas", [password]);
+    return result
   }
 }
