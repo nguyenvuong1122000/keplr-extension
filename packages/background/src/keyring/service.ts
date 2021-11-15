@@ -265,6 +265,58 @@ export class KeyRingService {
     }
   }
 
+  async requestSignAminoWithMulgiSig(
+    env: Env,
+    msgOrigin: string,
+    chainId: string,
+    signer: string,
+    signgerMultiSig:string,
+    signDoc: StdSignDoc,
+    signOptions: KeplrSignOptions
+  ): Promise<AminoSignResponse> {
+    console.log("sign here by background")
+    const coinType = await this.chainsService.getChainCoinType(chainId);
+
+    const key = await this.keyRing.getKey(chainId, coinType);
+    const bech32Address = new Bech32Address(key.address).toBech32(
+      (await this.chainsService.getChainInfo(chainId)).bech32Config
+        .bech32PrefixAccAddr
+    );
+    if (signer !== bech32Address) {
+      throw new Error("Signer mismatched");
+    }
+
+    const newSignDoc = (await this.interactionService.waitApprove(
+      env,
+      "/sign",
+      "request-sign",
+      {
+        msgOrigin,
+        chainId,
+        mode: "amino",
+        signDoc,
+        signgerMultiSig,
+        signOptions,
+      }
+    )) as StdSignDoc;
+
+    try {
+      const signature = await this.keyRing.sign(
+        env,
+        chainId,
+        coinType,
+        serializeSignDoc(newSignDoc)
+      );
+
+      return {
+        signed: newSignDoc,
+        signature: encodeSecp256k1Signature(key.pubKey, signature),
+      };
+    } finally {
+      this.interactionService.dispatchEvent(APP_PORT, "request-sign-end", {});
+    }
+  }
+
   async requestSignDirect(
     env: Env,
     msgOrigin: string,

@@ -504,6 +504,56 @@ export class RequestSignAminoMsg extends Message<AminoSignResponse> {
     if (!this.signer) {
       throw new Error("signer not set");
     }
+    // Validate bech32 address.
+    Bech32Address.validate(this.signer);
+
+    if (this.signDoc.chain_id !== this.chainId) {
+      throw new Error(
+        "Chain id in the message is not matched with the requested chain id"
+      );
+    }
+
+    if (!this.signOptions) {
+      throw new Error("Sign options are null");
+    }
+  }
+
+  approveExternal(): boolean {
+    return true;
+  }
+
+  route(): string {
+    return ROUTE;
+  }
+
+  type(): string {
+    return RequestSignAminoMsg.type();
+  }
+}
+
+export class RequestSignAminoWithMultiSigMsg extends Message<AminoSignResponse> {
+  public static type() {
+    return "request-sign-amino";
+  }
+
+  constructor(
+    public readonly chainId: string,
+    public readonly signer: string,
+    public readonly signgerMultiSig: string,
+    public readonly signDoc: StdSignDoc,
+    public readonly signOptions: KeplrSignOptions = {}
+  ) {
+    super();
+  }
+
+  validateBasic(): void {
+    if (!this.chainId) {
+      throw new Error("chain id not set");
+    }
+
+    if (!this.signer) {
+      throw new Error("signer not set");
+    }
 
     // Validate bech32 address.
     Bech32Address.validate(this.signer);
@@ -531,6 +581,7 @@ export class RequestSignAminoMsg extends Message<AminoSignResponse> {
     return RequestSignAminoMsg.type();
   }
 }
+
 
 export class RequestSignDirectMsg extends Message<{
   readonly signed: {

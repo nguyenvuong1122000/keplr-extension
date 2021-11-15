@@ -118,5 +118,5 @@ export interface Keplr {
     ciphertext: Uint8Array,
     nonce: Uint8Array
   ): Promise<Uint8Array>;
-  exportKeyRingDatas(password: string): Promise<ExportKeyRingData[]>
+  createStdSigDoc(json_data:any): Promise<StdSignDoc>
 }

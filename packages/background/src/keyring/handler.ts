@@ -20,7 +20,8 @@ import {
   RestoreKeyRingMsg,
   GetIsKeyStoreCoinTypeSetMsg,
   CheckPasswordMsg,
-  ExportKeyRingDatasMsg,
+  RequestSignAminoWithMultiSigMsg,
+
 } from "./messages";
 import { KeyRingService } from "./service";
 import { Bech32Address } from "@keplr-wallet/cosmos";
@@ -100,10 +101,10 @@ export const getHandler: (service: KeyRingService) => Handler = (
         );
       case CheckPasswordMsg:
         return handleCheckPasswordMsg(service)(env, msg as CheckPasswordMsg);
-      case ExportKeyRingDatasMsg:
-        return handleExportKeyRingDatasMsg(service)(
+      case RequestSignAminoWithMultiSigMsg: 
+        return handleSignAminoWithMulgiSiMsg(service)(
           env,
-          msg as ExportKeyRingDatasMsg
+          msg as RequestSignAminoWithMultiSigMsg
         );
       default:
         throw new Error("Unknown msg type");
@@ -280,6 +281,29 @@ const handleRequestSignAminoMsg: (
   };
 };
 
+const handleSignAminoWithMulgiSiMsg: (
+  service: KeyRingService
+) => InternalHandler<RequestSignAminoWithMultiSigMsg> = (service) => {
+  return async (env, msg) => {
+    await service.permissionService.checkOrGrantBasicAccessPermission(
+      env,
+      msg.chainId,
+      msg.origin
+    );
+
+    return await service.requestSignAminoWithMulgiSig(
+      env,
+      msg.origin,
+      msg.chainId,
+      msg.signgerMultiSig,
+      msg.signer,
+      msg.signDoc,
+      msg.signOptions
+    );
+  };
+};
+
+
 const handleRequestSignDirectMsg: (
   service: KeyRingService
 ) => InternalHandler<RequestSignDirectMsg> = (service) => {
@@ -360,13 +384,5 @@ const handleCheckPasswordMsg: (
 ) => InternalHandler<CheckPasswordMsg> = (service) => {
   return (_, msg) => {
     return service.checkPassword(msg.password);
-  };
-};
-
-const handleExportKeyRingDatasMsg: (
-  service: KeyRingService
-) => InternalHandler<ExportKeyRingDatasMsg> = (service) => {
-  return async (_, msg) => {
-    return await service.exportKeyRingDatas(msg.password);
   };
 };

@@ -6,7 +6,6 @@ import {
   KeplrSignOptions,
   Key,
 } from "@keplr-wallet/types";
-import{ExportKeyRingData, ExportKeyRingDatasMsg} from "@keplr-wallet/background"
 import { BACKGROUND_PORT, MessageRequester } from "@keplr-wallet/router";
 import {
   BroadcastMode,
@@ -14,6 +13,10 @@ import {
   StdSignDoc,
   StdTx,
   OfflineSigner,
+  Coin,
+  Msg,
+  makeSignDoc,
+  StdFee,
 } from "@cosmjs/launchpad";
 import {
   EnableAccessMsg,
@@ -29,8 +32,8 @@ import {
   RequestDecryptMsg,
   GetTxEncryptionKeyMsg,
 } from "./types";
+import { RequestSignAminoWithMultiSigMsg} from "@keplr-wallet/background"
 import { SecretUtils } from "secretjs/types/enigmautils";
-
 import { KeplrEnigmaUtils } from "./enigma";
 import { DirectSignResponse, OfflineDirectSigner } from "@cosmjs/proto-signing";
 
@@ -70,11 +73,6 @@ export class Keplr implements IKeplr {
     return await this.requester.sendMessage(BACKGROUND_PORT, msg);
   }
 
-  async exportKeyRingDatas(password: string): Promise<ExportKeyRingData[]>{
-    const msg = new ExportKeyRingDatasMsg(password);
-    return await this.requester.sendMessage(BACKGROUND_PORT, msg);
-  }
-
   async sendTx(
     chainId: string,
     tx: StdTx | Uint8Array,
@@ -93,6 +91,23 @@ export class Keplr implements IKeplr {
     const msg = new RequestSignAminoMsg(
       chainId,
       signer,
+      signDoc,
+      deepmerge(this.defaultOptions.sign ?? {}, signOptions)
+    );
+    return await this.requester.sendMessage(BACKGROUND_PORT, msg);
+  }
+
+  async signAminoMultiSig(
+    chainId: string,
+    signer: string,
+    signgerMultiSig : string,
+    signDoc: StdSignDoc,
+    signOptions: KeplrSignOptions = {}
+  ): Promise<AminoSignResponse> {
+    const msg = new RequestSignAminoWithMultiSigMsg(
+      chainId,
+      signer,
+      signgerMultiSig,
       signDoc,
       deepmerge(this.defaultOptions.sign ?? {}, signOptions)
     );
@@ -215,6 +230,38 @@ export class Keplr implements IKeplr {
       new RequestDecryptMsg(chainId, ciphertext, nonce)
     );
   }
+  createStdSigDoc(json_data:any): StdSignDoc{        
+    var msg : Msg = {
+        type :json_data.type,
+        value : {
+            from_address: json_data.from_address,
+            to_address: json_data.to_address,
+            amount: json_data.amount,
+        }
+    }
+    var arr_amino_msg : Msg[] = [msg]
+    var coin : Coin = {
+        denom: json_data.denom,
+        amount: json_data.amount,
+    }
+    var arr_coin : Coin[] = [coin]
+
+    var fee : StdFee = {
+        amount: arr_coin,
+        gas:json_data.gas
+    }
+    
+
+    return makeSignDoc(
+        arr_amino_msg, 
+        fee, 
+        json_data.chainId, 
+        json_data.memo, 
+        json_data.accountNumber, 
+        json_data.sequence
+    )
+}
+
 
   getEnigmaUtils(chainId: string): SecretUtils {
     if (this.enigmaUtils.has(chainId)) {

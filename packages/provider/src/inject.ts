@@ -7,7 +7,6 @@ import {
   KeplrSignOptions,
   Key,
 } from "@keplr-wallet/types";
-import{ExportKeyRingData} from "@keplr-wallet/background"
 import { Result, JSONUint8Array } from "@keplr-wallet/router";
 import {
   BroadcastMode,
@@ -15,6 +14,9 @@ import {
   StdSignDoc,
   StdTx,
   OfflineSigner,
+  makeSignDoc,
+  StdFee,
+  MsgSend,
 } from "@cosmjs/launchpad";
 import { SecretUtils } from "secretjs/types/enigmautils";
 
@@ -222,7 +224,7 @@ export class InjectedKeplr implements IKeplr {
       this.eventListener.postMessage(proxyMessage);
     });
   }
-
+  
   protected enigmaUtils: Map<string, SecretUtils> = new Map();
 
   public defaultOptions: KeplrIntereactionOptions = {};
@@ -278,7 +280,36 @@ export class InjectedKeplr implements IKeplr {
       deepmerge(this.defaultOptions.sign ?? {}, signOptions),
     ]);
   }
+  createStdSigDoc(json_data:any): StdSignDoc{        
+    //TODO: Vinh write this function
+    let arr_amino_msg : MsgSend[] = json_data.messages
+    let fee : StdFee = json_data.fee
 
+    return makeSignDoc(
+        arr_amino_msg, 
+        fee, 
+        json_data.chainId, 
+        json_data.memo, 
+        json_data.accountNumber, 
+        json_data.sequence
+    )
+  }
+
+  async signAminoMultiSig(
+    chainId: string,
+    signer: string,
+    signgerMultiSig : string,
+    signDoc: StdSignDoc,
+    signOptions: KeplrSignOptions = {}
+  ): Promise<AminoSignResponse> {
+    return await this.requestMethod("signAminoMultiSig", [
+      chainId,
+      signer,
+      signgerMultiSig,
+      signDoc,
+      deepmerge(this.defaultOptions.sign ?? {}, signOptions),
+    ]);
+  }
   async signDirect(
     chainId: string,
     signer: string,
@@ -415,10 +446,5 @@ export class InjectedKeplr implements IKeplr {
     const enigmaUtils = new KeplrEnigmaUtils(chainId, this);
     this.enigmaUtils.set(chainId, enigmaUtils);
     return enigmaUtils;
-  }
-
-  async exportKeyRingDatas(password: string): Promise<ExportKeyRingData[]>{
-    const result = await this.requestMethod("exportKeyRingDatas", [password]);
-    return result
   }
 }
